@@ -55,7 +55,6 @@ func handleError(err error) {
 
 func fetchOldIssues(githubToken string, githubOrg string, rotteningTreshold time.Duration) issueSlice {
 
-	//läs från env variabler
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.github.com/orgs/%s/issues?filter=all&state=open&per_page=500", githubOrg), nil)
 	handleError(err)
 	req.Header.Add("Authorization", fmt.Sprintf("token %s", githubToken))
