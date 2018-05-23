@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -141,16 +142,13 @@ func fetchEnvironmentVariableOrQuit(environmentVariableName string) string {
 }
 
 func populateIgnoredRepos(ignoredReposFilePath string) {
-	if ignoredReposFilePath != "" {
+	file, err := os.Open(ignoredReposFilePath)
+	handleError(err)
+	defer file.Close()
 
-		file, err := os.Open(ignoredReposFilePath)
-		handleError(err)
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			ignoredRepos[scanner.Text()] = true
-		}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		ignoredRepos[scanner.Text()] = true
 	}
 }
 
@@ -163,8 +161,8 @@ func main() {
 	flag.StringVar(&slackChannel, "channel", "", "The slack channel to post to")
 	var githubOrg string
 	flag.StringVar(&githubOrg, "github-org", "", "The github organisation to check for rotten issues in")
-	var ignoredReposFilePath string
-	flag.StringVar(&ignoredReposFilePath, "ignored-repos-path", "", "The relative path to a file containing a list of repos to ignore")
+	var ignoredReposFile string
+	flag.StringVar(&ignoredReposFile, "ignored-repos-file", "", "The name of a file in the same folder as the executable containing a list of repos to ignore")
 	var rotteningTreshold int
 	flag.IntVar(&rotteningTreshold, "rottening-threshold", 100, "The treshold in days for when an issue is considered rotten")
 
@@ -175,13 +173,21 @@ func main() {
 	if githubOrg == "" {
 		log.Fatalf("You need to specify which github organisation to check for rottening issues. Like this '-github-org=my-github-org'")
 	}
-	populateIgnoredRepos(ignoredReposFilePath)
+
+	ex, err := os.Executable()
+	handleError(err)
+	executablePath := filepath.Dir(ex)
+
+	if ignoredReposFile != "" {
+		ignoredReposFilePath := fmt.Sprintf("%s%s%s", executablePath, string(os.PathSeparator), ignoredReposFile)
+		populateIgnoredRepos(ignoredReposFilePath)
+	}
 
 	api := slack.New(slackToken)
 	issues := fetchOldIssues(githubToken, githubOrg, time.Duration(rotteningTreshold))
 
-	readBytes, err := ioutil.ReadFile("issues-last-week.txt")
-	handleError(err)
+	issuesLastWeekPath := fmt.Sprintf("%s%sissues-last-week.txt", executablePath, string(os.PathSeparator))
+	readBytes, _ := ioutil.ReadFile(issuesLastWeekPath)
 
 	numberOfIssuesLastWeek, err := strconv.Atoi(string(readBytes))
 	numberOfIssuesThisWeek := len(issues)
@@ -203,7 +209,7 @@ func main() {
 		attachments = append(attachments, attachment)
 	}
 
-	err = ioutil.WriteFile("issues-last-week.txt", []byte(strconv.Itoa(numberOfIssuesThisWeek)), os.ModePerm)
+	err = ioutil.WriteFile(issuesLastWeekPath, []byte(strconv.Itoa(numberOfIssuesThisWeek)), os.ModePerm)
 	handleError(err)
 	_, _, err = api.PostMessage(slackChannel, slackeMessage, slack.PostMessageParameters{Markdown: true, Attachments: attachments})
 	handleError(err)
