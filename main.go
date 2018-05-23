@@ -166,14 +166,14 @@ func main() {
 	var ignoredReposFilePath string
 	flag.StringVar(&ignoredReposFilePath, "ignored-repos-path", "", "The relative path to a file containing a list of repos to ignore")
 	var rotteningTreshold int
-	flag.IntVar(&rotteningTreshold, "rottening-treshold", 100, "The treshold in days for when an issue is considered rotten")
+	flag.IntVar(&rotteningTreshold, "rottening-threshold", 100, "The treshold in days for when an issue is considered rotten")
 
 	flag.Parse()
 	if slackChannel == "" {
 		log.Fatalf("You need to specify which slack channel to send the message to. Like this '-channel=my-slack-channel'")
 	}
 	if githubOrg == "" {
-		log.Fatalf("You need to specify which github-organisation to check for rottening issues. Like this '-github-org=my-github-org'")
+		log.Fatalf("You need to specify which github organisation to check for rottening issues. Like this '-github-org=my-github-org'")
 	}
 	populateIgnoredRepos(ignoredReposFilePath)
 

@@ -22,8 +22,8 @@ You also need a few command line parameters
 | ------------------------------------- | ------------------ | ----------------------- | ----------- |
 | channel | yes |N/A|The slack channel to post the message about the rottening issues|
 | github-org | yes |N/A|The github organisation you want to check for rottening issues in|
-| ignoredReposFilePath | no |N/A| Path to a file with the repos to ignore, one repo name per file, LF file endings|
-| rotteningTreshold | no | 100| number of days an issue can be left alone (not modified) before it is considered rotten |
+| ignored-repos-path | no |N/A| Path to a file with the repos to ignore, one repo name per file, LF file endings|
+| rottening-threshold | no | 100| number of days an issue can be left alone (not modified) before it is considered rotten |
 
 ## Example
 
